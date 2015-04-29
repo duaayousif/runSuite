@@ -1,0 +1,30 @@
+#!/bin/bash
+
+if [ $# -ne 2 ]; then     #check number of command line arguements
+     echo "ERROR: Incorrect number of command line arguements. Exiting!" >&2
+     exit 5
+fi
+   for t in `cat "$1"`; do     #go through each test
+     curr=`mktemp`      #make a temporary directory
+        if [ -r "$t".out -a -r "$t".in ]; then
+          if [ -r "$t".args ]; then
+            "${2}" `cat "$t".args` < "$t".in > $curr
+          else
+            "${2}" < "$t".in > ${curr}
+          fi
+           diff "$t".out $curr > /dev/null
+              if [ $?  -ne 0 ]; then
+                 echo Test failed: "$t"
+                 echo Input:
+                 cat "$t".in
+                 echo Expected:
+                 cat "$t".out
+                 echo Actual:
+                 cat ${curr}
+              fi
+        else
+             echo "ERROR: Missing or unreadable .in or .out file. Exiting!" >&2
+             exit 1
+         fi
+     rm ${curr}
+done
